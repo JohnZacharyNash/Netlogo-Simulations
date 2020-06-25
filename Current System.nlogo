@@ -19,6 +19,7 @@ globals
   boat-oob?
   boat-returned-home?
   boat-arrived-base-1?
+  first-hydro
 ]
 
 patches-own [ depth]
@@ -192,12 +193,34 @@ to go-tag ;tag procedure that defines the behaviour of the tag every tick
 
     if size < 600
     [
-      set size size + 10
+      set size size + 100
     ]
     if size > 599
     [
 
     set size 1
+
+    ]
+
+      ask hydrophones in-radius (size / 5) [
+
+    set first-hydro who
+
+      if (first-hydro = 3)
+      [
+        print "forward"
+      ]
+      if (first-hydro = 4)
+      [
+        print "left"
+      ]
+      if (first-hydro = 5)
+      [
+        print "right"
+      ]
+
+
+
 
     ]
 
@@ -264,16 +287,16 @@ to go-boat-stationary
 end
 
 to go-boat-follow-fish
-  ;follow fish
-  let these-fishes fishes in-radius 20
+let these-fishes fishes in-radius 150
   let this-fish nobody
 
-  if (count these-fishes = 0)
+
+          ifelse (count these-fishes = 0)
             [
               output-print (word "Lost the fish at tick: " ticks)
               fd boat-speed
             ]
-
+            [
               set this-fish one-of these-fishes
               set heading towards this-fish
               ifelse (distance this-fish > 10)
@@ -282,11 +305,8 @@ to go-boat-follow-fish
                   output-print (word "Too close to fish, slowing: " ticks)
 
                   fd boat-speed / 10
-              ]
-
-
-
-
+                ] ; too close - slow down
+            ]
 
 
 end
@@ -391,7 +411,7 @@ fish-speed
 fish-speed
 0
 10
-1.0
+1.8
 0.1
 1
 NIL
@@ -406,7 +426,7 @@ boat-speed
 boat-speed
 0
 10
-1.0
+1.2
 0.1
 1
 NIL

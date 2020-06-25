@@ -33,7 +33,7 @@ to setup
   clear-all
   setup-AUV
   setup-fish
-  setup-environment
+  ;setup-environment
   reset-ticks
 end
 
@@ -499,7 +499,7 @@ CHOOSER
 fish-behaviour
 fish-behaviour
 "Stationary" "Follow coastline" "Random" "Deeper" "Deeper random"
-0
+2
 
 CHOOSER
 13
@@ -520,7 +520,7 @@ fish-speed
 fish-speed
 0
 10
-1.0
+1.6
 0.1
 1
 NIL

@@ -1,136 +1,83 @@
 breed [fishes fish]
-breed [boats boat]
-breed [hydrophones hydrophone]
-breed [tags tag]
+breed [AUVs AUV]
 
 globals
 [
   the-fish
-  the-boat
-  the-tag
-  the-hydrophone-left
-  the-hydrophone-right
-  the-hydrophone-front
+  the-AUV
   sea-colour
-  boat-base-0-x boat-base-0-y
-  boat-base-1-x boat-base-1-y
-  fish-start-0-x fish-start-0-y
-  fish-oob?
-  boat-oob?
-  boat-returned-home?
-  boat-arrived-base-1?
-  first-hydro
+  deep-sea-colour
+  the-deep-sea
+  AUV-base-0-x AUV-base-0-y
+  AUV-base-1-x AUV-base-1-y
+  fish-outside-tracking-area?
+  AUV-outside-tracking-area?
+  AUV-returned-to-home?
+  AUV-arrived-base-1?
+
+
+
+
 ]
 
 patches-own [ depth]
 fishes-own [ direction]
 
+
+
+; INITIALIZATION SETUP
 to setup
 
-  ; Sets up the fish, ARCboat. hydrophones, tags and environment
+  ; Sets up the fish, AUV and environment.
 
   clear-all
-  setup-tag
-  setup-boat
+  setup-AUV
   setup-fish
   ;setup-environment
-  setup-hydrophones
-
-
   reset-ticks
 end
 
-to setup-hydrophones
 
-  create-hydrophones 3
+to setup-AUV
+  ;Sets up the AUV
+
+  set AUV-outside-tracking-area? false
+  set AUV-arrived-base-1? false
+  set AUV-returned-to-home? false
+
+  set AUV-base-0-x 14
+  set AUV-base-0-y -55
+
+  set AUV-base-1-x 25
+  set AUV-base-1-y 50
+
+  create-AUVs 1
   [
-    set size 15
-    ask hydrophone 3 [
-      setxy boat-base-0-x boat-base-0-y
-      set shape "fronthydro"
-      set heading 0
-
-
-
-    ]
-    ask hydrophone 4[
-      setxy boat-base-0-x  boat-base-0-y
-      set shape "lefthydro"
-      set heading 0
-    ]
-
-    ask hydrophone 5[
-      setxy boat-base-0-x boat-base-0-y
-      set shape "righthydro"
-      set heading 0
-    ]
-
-
-  ]
-
-
-end
-
-
-to setup-tag
-  ;sets up acoustic tag
-
-    set fish-start-0-x 4
-    set fish-start-0-y -40
-
-  create-tags 1
-  [
-    set the-tag self
-    setxy fish-start-0-x fish-start-0-y
-    set size 20
-    set shape "seethru"
-
-
-
-  ]
-
-
-end
-
-
-to setup-boat
-
-  ;Sets up the boat
-  set boat-oob? false
-  set boat-arrived-base-1? false
-  set boat-returned-home? false
-
-  set boat-base-0-x 14
-  set boat-base-0-y -55
-
-  set boat-base-1-x 25
-  set boat-base-1-y 50
-
-  create-boats 1
-  [
-    set the-boat self
-    setxy boat-base-0-x boat-base-0-y
+    set the-AUV self
+    setxy AUV-base-0-x AUV-base-0-y
     set size 10
     set pen-size 1
     pen-down
+    ;set shape "robot"
     set color magenta
-    set heading 0
-
+    set heading 340
   ]
+
 end
 
 to setup-fish
 
-  ;sets up the fish
-    set fish-start-0-x 4
-    set fish-start-0-y -40
 
-  set fish-oob? false
+  set fish-outside-tracking-area? false
   create-fishes 1
   [
+
     set the-fish self
-    setxy fish-start-0-x fish-start-0-y
+    setxy 10 -48
     set size 7
+    ;set pensize 1.4
+    ;pen-down
+    ;set shape "fish 1"
     set color gray
     set heading 0
 
@@ -141,181 +88,343 @@ to setup-fish
     set direction 1
     if (direction = 1)
     [set heading 25]
+  ]
+end
 
+to setup-environment
+; Loads the environment from the map image.
+
+  let py min-pycor + 4
+  let px 0
+
+  import-pcolors "Rhyl1.png"
+
+  set sea-colour blue + 3
+  set deep-sea-colour blue + 2
+  set the-deep-sea 22
+
+  while [py < max-pxcor]
+  [
+    set px min-pxcor
+    while [px <= max-pxcor]
+    [
+      ask patch px (py - 4)
+      [ set pcolor [pcolor] of patch px py ]
+      set px px + 1
+    ]
+    set py py + 1
   ]
 
+  ask patches with [pycor > 62]
+  [ set pcolor sea-colour ] ; colour upper part of environment to the sea
+  ask patches with [pxcor < -217]
+  [ set pcolor sea-colour ] ; colour left part of environment to the sea
+
+  ask patches with [(pxcor > -199 and pxcor < -186) and (pycor > -105 and pycor < -92)]
+  [ set pcolor sea-colour ] ; colour pointer to the sea
+
+;  ask patches with [(pcolor < 29.5 and pcolor > 28.0) or (pcolor = 38.7)]
+;  [ set pcolor blue + 4 ] ; colour mudflat area
+
+  ask patches with [(pcolor < 99.5 and pcolor > 98.5)]
+  [ set pcolor sea-colour ] ; colour the sea
+;  ask patches with [((pcolor > 97.5 and pcolor < 98.5) or (pcolor > 85.5 and pcolor < 87.8)) and (pxcor < 129) and (pycor > -155)]
+;  [ set pcolor magenta ] ; get rid of map grid
+  ask patches with [(pcolor = 84.9) and (pxcor = 130) and (pycor > -27)]
+  [ set pcolor sea-colour ] ; get rid of map grid
+;  ask patches with [(pcolor = 96.7) and (pxcor = 130) and (pycor > -27)]
+;  [ set pcolor magenta ] ; get rid of map grid
+;  ask patches with [(pcolor = 89.2) or (pcolor = 89.3)]
+;  [ set pcolor orange ] ; get rid of map grid
+
+  ask patches with [(pcolor < 89.5 and pcolor > 84.5) and (pycor != -30)]
+  [ set pcolor sea-colour ] ; colour odd bits at edges of marsh as the sea
+  ask patches with [(pcolor < 96.5 and pcolor > 94.5)]
+  [ set pcolor sea-colour ] ; colour odd bits at edges of marsh as the sea
+
+  ask patches with [(pcolor != sea-colour) and (length (filter [ ?1 -> ?1 = sea-colour ] [pcolor] of neighbors) >= 3)]
+  [ set pcolor sea-colour ] ; colour odd bits in rest of the sea
+
+;  ask patches with [(pcolor != 29) and (length (filter [? = 29] [pcolor] of neighbors) >= 3)]
+;  [ set pcolor sea-colour ] ; colour odd bits in mudflats
+
+  ask patches with [(pcolor = sea-colour) and ((pxcor > 280) or (pxcor < -280) or (pycor > 170) or ((pycor < -170) and (pxcor < -170)))]
+  [ set pcolor deep-sea-colour ] ; mark the deep blue sea which the robot is not allowed to move out off
+
+  ; set the depth of the sea
+  ask patches with [pcolor = sea-colour or pcolor = deep-sea-colour]
+  [
+    ifelse (pycor < -60) and (pxcor < -34)
+      [ ; bottom left corner
+        set depth 5 + (pycor - min-pycor) / 10
+        if (depth < 8)
+          [ set depth 8 ]
+      ]
+      [ set depth 1 + (pycor - min-pycor) / 10 ]
+
+;    if-else (count patches in-radius 15 with [(pcolor != sea-colour) and (pcolor != deep-sea-colour)] > 0)
+;      [ set depth 1 + pycor / 10 ]
+;      [
+;        set depth 10 + (distance patch 26 20) / 10
+;      ]
+  ]
+
+;  ask patches with [pcolor = deep-sea-colour]
+;  [
+;    set depth 45 + random 10 - random 10
+;  ]
+
+;  check depth
+;  ask patches with [pcolor = sea-colour or pcolor = deep-sea-colour]
+;  [ set pcolor scale-color blue depth 0 50 ]
 end
-to setup-environment
-  ;Loads the environment
-  set-plot-background-color blue + 3
-end
+
+
+; INITIALIZATION GO
 
 to go
 
-  ask hydrophones[
-    go-hydrophones
-  ]
-  ask fishes[
+  ask fishes
+  [
     go-fish
   ]
-  ask boats[
-    go-boat
+  ask AUVs
+  [
+    go-AUV
   ]
-
-  ask tags[
-    go-tag
-  ]
-
-  if (boat-returned-home?)
+  if (AUV-returned-to-home?)
   [stop]
   tick
 end
 
-to go-hydrophones
-  ask hydrophones[
-    create-link-with the-boat [tie]
-
-
-
-  ]
-end
-
-
-
-to go-tag ;tag procedure that defines the behaviour of the tag every tick
-    let these-fishes fishes in-radius 1000
-    let this-fish nobody
-    set this-fish one-of these-fishes
-    set heading towards this-fish
-    fd fish-speed
-
-  ask tags [
-
-    if size < 600
-    [
-      set size size + 100
-    ]
-    if size > 599
-    [
-
-    set size 1
-
-    ]
-
-      ask hydrophones in-radius (size ) [
-
-    set first-hydro who
-
-      if (first-hydro = 3)
-      [
-        print "forward"
-      ]
-      if (first-hydro = 4)
-      [
-        print "left"
-      ]
-      if (first-hydro = 5)
-      [
-        print "right"
-      ]
-
-
-
-
-    ]
-
-  ]
-
-
-
-
-end
-
-
-
 to go-fish ;fish procedure that defines the behaviour of the fish every tick
 
-
-    fish-head-randomly
+  fish-head-randomly
 
   let fish-behaviours
   [ "Stationary" "go-fish-stationary"
     "Random" "go-fish-random"
-     ]
+    "Follow coastline" "go-fish-follow-coastline"
+    "Deeper" "go-fish-deeper"
+    "Deeper random" "go-fish-deeper-random" ]
   let p position fish-behaviour fish-behaviours
   run (item(p + 1) fish-behaviours)
 end
 
-
-
-to go-boat
-
-
-    let boat-behaviours [
-    "Stationary" "go-boat-stationary"
-    "Follow fish" "go-boat-follow-fish"]
-
-    let p position boat-behaviour boat-behaviours
-    run (item(p + 1) boat-behaviours)
-
+to go-AUV
+  let AUV-behaviours
+  [ "Stationary" "go-AUV-stationary"
+    "Follow fish" "go-AUV-follow-fish" ]
+    let p position AUV-behaviour AUV-behaviours
+    run (item(p + 1) AUV-behaviours)
 end
 
-;*********************FISH BEHAVIOURS*********************
+; FISH BEHAVIOURS
 
 to go-fish-stationary
-  ;do nothing
+; Fish behaviour: Do nothing.
 
 end
 
-to fish-head-randomly
-  ;fish wanders in a random state according to the slider var
-  if (random 100 < heading-percentage)
-  [ set heading heading + random heading-change-percentage - random heading-change-percentage ]
+to go-fish-follow-coastline
+; Fish behaviour: Follow the coastline where possible.
+
+  if (random 100 >= feed-percentage)
+    [
+      fish-outside-tracking-area
+
+      if (not avoid-coastline? 5)
+        [ fd fish-speed ]
+    ]
+end
+
+to fish-outside-tracking-area
+; Checks whether the fish has reached the outside tracking area.
+
+  if (outside-tracking-area?)
+    [ set fish-outside-tracking-area? true
+      output-print "Fish has gone outside tracking area!"
+      die ]
+end
+
+to fish-head-deeper ;; fish turtle procedure
+; Fish heads to deeper to ocean.
+
+  let next-patch max-one-of neighbors [depth]
+  set heading towards next-patch
+end
+
+to go-fish-deeper
+; Fish behaviour: Heads further into the ocean
+
+  if (not avoid-coastline? 90)
+    [ fish-outside-tracking-area ]
+
+  fish-head-deeper
+  fd fish-speed
+end
+
+to go-fish-deeper-random
+; Fish behaviour: Heads further into the ocean
+; the deep sea as defined by the variable the-deep-sea.
+
+  if (not avoid-coastline? 90)
+    [ fish-outside-tracking-area ]
+
+  ifelse (depth >= the-deep-sea)
+    [ fish-head-randomly ]
+    [ fish-head-deeper ]
+
+  fd fish-speed
 end
 
 to go-fish-random
+; Fish behaviour: Same as the procedure go-fish-deeper-random above for the time being.
 
-  fish-head-randomly
+  if (not avoid-coastline? 90)
+    [ fish-outside-tracking-area ]
+
+  ifelse (depth >= the-deep-sea)
+    [ fish-head-randomly ]
+    [ fish-head-deeper ]
+
   fd fish-speed
+end
 
+to fish-head-randomly ;; fish turtle procedure
+
+; Fish wanders in a random fashion by changing its heading slightly according to the slider variable heading-change-percentage.
+
+  if (random 100 < heading-percentage)
+    [ set heading heading + random heading-change-percentage - random heading-change-percentage ]
+end
+
+to fish-swim  ;; fish turtle procedure
+  ;; turn right if necessary
+  if not coastline? (90 * direction) and coastline? (135 * direction) [ rt 90 * direction ]
+  ;; turn left if necessary (sometimes more than once)
+  while [coastline? 0] [ lt 90 * direction ]
+  ;; move forward
+  fd fish-speed
 end
 
 
+ ;OUT OF BOUNDS CHECKERS
 
-;*********************BOAT BEHAVIOURS*********************
-to go-boat-stationary
+
+
+to-report avoid-coastline? [heading-change]
+; Returns true if the turtle the agent needs to aboid the coastline.
+
+  let avoid? true
+  ifelse (coastline? 0)
+    [ ifelse (random 2 = 0)
+        [ set heading heading - heading-change ]
+        [ set heading heading + heading-change ]
+    ]
+    [ ifelse (coastline? heading-change)
+        [ set heading heading - heading-change ] ; turn to the left
+        [ ifelse (coastline? (- heading-change))
+            [ set heading heading + heading-change ] ; turn to the right
+            [ set avoid? false ]
+        ]
+    ]
+
+  report avoid?
 end
 
-to go-boat-follow-fish
-let these-fishes fishes in-radius 150
+to-report coastline? [angle]  ;; turtle procedure
+  ;; note that angle may be positive or negative.  if angle is
+  ;; positive, the turtle looks right.  if angle is negative,
+  ;; the turtle looks left.
+  let ahead-colour [pcolor] of patch-right-and-ahead angle 1
+  report (ahead-colour != sea-colour) and (ahead-colour != deep-sea-colour)
+end
+
+to-report outside-tracking-area?   ;; turtle procedure
+
+
+; Returns true if the turtle is outside of the tracking area.
+
+  report (([pcolor] of patch-here != sea-colour) and (deep-sea-colour = [pcolor] of (patch-ahead 1)))
+end
+
+
+; AUV BEHAVIOURS
+to go-AUV-stationary
+; AUV behaviour: do nothing
+
+end
+
+to go-AUV-follow-fish
+; Robot behaviour: follow the tagged fish.
+
+  let these-fishes fishes in-radius 10
   let this-fish nobody
 
-
+  ifelse (fish-outside-tracking-area? or AUV-outside-tracking-area?)
+    [ AUV-return-to-base ]
+    [
+      ifelse (outside-tracking-area?)
+        [ set AUV-outside-tracking-area? true
+          output-print "AUV has gone outside tracking area!" ]
+        [
           ifelse (count these-fishes = 0)
             [
               output-print (word "Lost the fish at tick: " ticks)
-              fd boat-speed
+              fd AUV-speed
             ]
             [
               set this-fish one-of these-fishes
               set heading towards this-fish
               ifelse (distance this-fish > 10)
-                [ fd boat-speed ]
+                [ fd AUV-speed ]
                 [
                   output-print (word "Too close to fish, slowing: " ticks)
 
-                  fd boat-speed / 10
+                  fd AUV-speed / 10
                 ] ; too close - slow down
             ]
+        ]
+    ]
+end
 
+to AUV-return-to-base
+; Robot behaviour: return the robot to its base.
 
+  ifelse (not AUV-arrived-base-1?)
+    [
+      set heading (towards patch AUV-base-1-x AUV-base-1-y) + random 10 - random 10
+      if (distancexy AUV-base-1-x AUV-base-1-y < 2)
+        [ set AUV-arrived-base-1? true ]
+    ]
+    [
+      let next-patch min-one-of neighbors [sea-depth]
+      set heading towards next-patch
+      if (ycor <= AUV-base-0-y)
+        [
+          user-message "Reached home base!"
+          set AUV-returned-to-home? true
+        ]
+    ]
+  fd AUV-speed
+  wait 0.01
+end
+
+to-report sea-depth
+; Reports the sea depth but sets the depth to a large number if depth = 0 (i.e. not the sea) for sorting purposes
+; (as used in above procedure).
+
+  ifelse (depth = 0)
+    [ report 99999 ]
+    [ report depth ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-212
-40
-1422
-811
+210
+46
+1420
+817
 -1
 -1
 2.0
@@ -339,10 +448,10 @@ ticks
 30.0
 
 BUTTON
-22
-45
-85
-78
+9
+49
+75
+82
 NIL
 setup
 NIL
@@ -356,12 +465,12 @@ NIL
 1
 
 BUTTON
-22
-92
-123
-136
+9
+85
+72
+118
 NIL
-go
+go\n
 T
 1
 T
@@ -373,94 +482,116 @@ NIL
 1
 
 TEXTBOX
-218
+216
 10
-725
-36
-Hydrophone Tracking System Simulation (1.0)
-22
+434
+60
+AUV Simulation (1.0)
+20
 0.0
 1
 
 CHOOSER
-18
-173
-156
-218
+13
+149
+151
+194
 fish-behaviour
 fish-behaviour
-"Stationary" "Random"
-1
+"Stationary" "Follow coastline" "Random" "Deeper" "Deeper random"
+0
 
 CHOOSER
-18
-219
-156
-264
-boat-behaviour
-boat-behaviour
+13
+194
+151
+239
+AUV-behaviour
+AUV-behaviour
 "Stationary" "Follow fish"
 1
 
 SLIDER
-15
-324
-187
-357
+11
+272
+183
+305
 fish-speed
 fish-speed
 0
 10
-1.8
+1.0
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-292
-187
-325
-boat-speed
-boat-speed
+11
+305
+183
+338
+AUV-speed
+AUV-speed
 0
 10
-1.2
+1.1
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-370
-189
-403
-heading-percentage
-heading-percentage
+10
+425
+182
+458
+feed-percentage
+feed-percentage
 0
 100
-38.0
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-402
-189
-435
-heading-change-percentage
-heading-change-percentage
+10
+457
+182
+490
+heading-percentage
+heading-percentage
 0
 100
-23.0
+10.0
 1
 1
 NIL
 HORIZONTAL
+
+SLIDER
+10
+490
+181
+523
+heading-change-percentage
+heading-change-percentage
+0
+100
+11.0
+1
+1
+NIL
+HORIZONTAL
+
+OUTPUT
+1459
+92
+1795
+641
+10
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -641,11 +772,6 @@ Circle -16777216 true false 113 68 74
 Polygon -10899396 true false 189 233 219 188 249 173 279 188 234 218
 Polygon -10899396 true false 180 255 150 210 105 210 75 240 135 240
 
-fronthydro
-true
-0
-Line -11221820 false 150 150 150 30
-
 house
 false
 0
@@ -659,11 +785,6 @@ false
 0
 Polygon -7500403 true true 150 210 135 195 120 210 60 210 30 195 60 180 60 165 15 135 30 120 15 105 40 104 45 90 60 90 90 105 105 120 120 120 105 60 120 60 135 30 150 15 165 30 180 60 195 60 180 120 195 120 210 105 240 90 255 90 263 104 285 105 270 120 285 135 240 165 240 180 270 195 240 210 180 210 165 195
 Polygon -7500403 true true 135 195 135 240 120 255 105 255 105 285 135 285 165 240 165 195
-
-lefthydro
-true
-0
-Line -11221820 false 150 150 30 150
 
 line
 true
@@ -700,16 +821,6 @@ Polygon -7500403 true true 165 180 165 210 225 180 255 120 210 135
 Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
-
-righthydro
-true
-0
-Line -11221820 false 150 150 270 150
-
-seethru
-true
-0
-Circle -13840069 false false 108 108 85
 
 sheep
 false
