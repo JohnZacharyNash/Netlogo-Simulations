@@ -143,11 +143,11 @@ to go-tag ;tag procedure that defines the behaviour of the tag every tick
 
   ask tags [
 
-    if size < 600
+    if size < 100
     [
       set size size + 10
     ]
-    if size > 599
+    if size > 999
     [
 
     set size 1
