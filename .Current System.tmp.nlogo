@@ -33,11 +33,43 @@ to setup
   setup-boat
   setup-fish
   ;setup-environment
-  ;setup-hydrophones
+  setup-hydrophones
 
 
   reset-ticks
 end
+
+to setup-hydrophones
+
+  create-hydrophones 3
+  [
+    set size 15
+    ask hydrophone 3 [
+      setxy boat-base-0-x boat-base-0-y
+      set shape "fronthydro"
+      set heading 0
+
+
+
+    ]
+    ask hydrophone 4[
+      setxy boat-base-0-x  boat-base-0-y
+      set shape "lefthydro"
+      set heading 0
+    ]
+
+    ask hydrophone 5[
+      setxy boat-base-0-x boat-base-0-y
+      set shape "righthydro"
+      set heading 0
+    ]
+
+
+  ]
+
+
+end
+
 
 to setup-tag
   ;sets up acoustic tag
@@ -81,7 +113,7 @@ to setup-boat
     set pen-size 1
     pen-down
     set color magenta
-    set heading 340
+    set heading 0
 
   ]
 end
@@ -118,13 +150,17 @@ to setup-environment
 end
 
 to go
+
+  ask hydrophones[
+    go-hydrophones
+  ]
   ask fishes[
     go-fish
   ]
   ask boats[
     go-boat
   ]
-  ;ask hydrophones
+
   ask tags[
     go-tag
   ]
@@ -133,6 +169,17 @@ to go
   [stop]
   tick
 end
+
+to go-hydrophones
+  ask hydrophones[
+    create-link- the-boat [tie]
+
+
+
+  ]
+end
+
+
 
 to go-tag ;tag procedure that defines the behaviour of the tag every tick
     let these-fishes fishes in-radius 1000
@@ -143,11 +190,11 @@ to go-tag ;tag procedure that defines the behaviour of the tag every tick
 
   ask tags [
 
-    if size < 100
+    if size < 600
     [
       set size size + 10
     ]
-    if size > 999
+    if size > 599
     [
 
     set size 1
@@ -374,7 +421,7 @@ heading-percentage
 heading-percentage
 0
 100
-10.0
+38.0
 1
 1
 NIL
@@ -389,7 +436,7 @@ heading-change-percentage
 heading-change-percentage
 0
 100
-10.0
+23.0
 1
 1
 NIL
@@ -574,6 +621,11 @@ Circle -16777216 true false 113 68 74
 Polygon -10899396 true false 189 233 219 188 249 173 279 188 234 218
 Polygon -10899396 true false 180 255 150 210 105 210 75 240 135 240
 
+fronthydro
+true
+0
+Line -11221820 false 150 150 150 30
+
 house
 false
 0
@@ -587,6 +639,11 @@ false
 0
 Polygon -7500403 true true 150 210 135 195 120 210 60 210 30 195 60 180 60 165 15 135 30 120 15 105 40 104 45 90 60 90 90 105 105 120 120 120 105 60 120 60 135 30 150 15 165 30 180 60 195 60 180 120 195 120 210 105 240 90 255 90 263 104 285 105 270 120 285 135 240 165 240 180 270 195 240 210 180 210 165 195
 Polygon -7500403 true true 135 195 135 240 120 255 105 255 105 285 135 285 165 240 165 195
+
+lefthydro
+true
+0
+Line -11221820 false 150 150 30 150
 
 line
 true
@@ -623,6 +680,11 @@ Polygon -7500403 true true 165 180 165 210 225 180 255 120 210 135
 Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
+
+righthydro
+true
+0
+Line -11221820 false 150 150 270 150
 
 seethru
 true
