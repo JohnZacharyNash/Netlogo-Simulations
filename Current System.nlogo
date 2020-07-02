@@ -44,7 +44,7 @@ to setup-hydrophones
 
   create-hydrophones 3
   [
-    set size 15
+    set size 30
     ask hydrophone 3 [
       setxy boat-base-0-x boat-base-0-y
       set shape "fronthydro"
@@ -81,7 +81,7 @@ to setup-tag
   create-tags 1
   [
     set the-tag self
-    setxy fish-start-0-x fish-start-0-y
+    setxy fish-start-0-x fish-location-y
     set size 20
     set shape "seethru"
 
@@ -129,7 +129,7 @@ to setup-fish
   create-fishes 1
   [
     set the-fish self
-    setxy fish-start-0-x fish-start-0-y
+    setxy fish-start-0-x fish-location-y
     set size 7
     set color gray
     set heading 0
@@ -202,21 +202,25 @@ to go-tag ;tag procedure that defines the behaviour of the tag every tick
 
     ]
 
-      ask hydrophones in-radius (size / 5) [
+      ask hydrophones in-radius (size / 6) [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
-    set first-hydro who
+      die
+
+    set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
+
+
 
       if (first-hydro = 3)
       [
-        print "forward"
+        print "front hydrophone"
       ]
       if (first-hydro = 4)
       [
-        print "left"
+        print "left hydrophone"
       ]
       if (first-hydro = 5)
       [
-        print "right"
+        print "right hydrophone"
       ]
 
 
@@ -314,11 +318,11 @@ end
 GRAPHICS-WINDOW
 212
 40
-1422
-811
+1021
+530
 -1
 -1
-2.0
+1.0
 1
 10
 1
@@ -328,10 +332,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--300
-300
--190
-190
+-400
+400
+-240
+240
 0
 0
 1
@@ -462,18 +466,41 @@ heading-change-percentage
 NIL
 HORIZONTAL
 
+SLIDER
+15
+458
+187
+491
+fish-location-y
+fish-location-y
+-100
+100
+22.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This simulation is built to be compared to a similar system, to just their effectiveness.
+This system has a autonomous boat reacting to a fish, with an acoustic tag attached to it. The 'current system' that this simulation is built to emulate is to use a three hydrophone rig, connected to a boat. The first hydrophone to recieve data from the ping is determined as the direction the fish is located. The boat then steers in that direction, following the fish. The boat can peroidically lose signal to the fish, if the hydrophones are recieving no data.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+Fish agent has user-specified behaviours, primarily random behaviour which is also user determined using the interface sliders. The speed of the fish is also user defined, so the user decides how irratic the behaviour of the fish is. 
+
+A acoustic tag is attached to the fish agent, which takes the form of a circle outline, which grows in size until it reaches its maximum range. When maximum range is reached, it returns to its original size, emulating another ping from the tag.
+
+Currently the boat has a few behaviours, of which the default is to simply follow the fish. The main goal is to have a new behaviour which is reactive based on the hydrophone data.
+
+Three hydrophone agents are tied to the boat, and take the form of a cyan blue line. These are used to collide with the acoustic tag circle agent.
+
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+NOTE FOR BILL: try turning the ticks to the lowest point, you will see that the collision is not in a fine enough detail, and all three hydrophones are hit together.
 
 ## THINGS TO NOTICE
 
