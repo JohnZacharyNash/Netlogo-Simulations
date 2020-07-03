@@ -44,7 +44,7 @@ to setup-hydrophones
 
   create-hydrophones 3
   [
-    set size 30
+    set size 50
     ask hydrophone 3 [
       setxy boat-base-0-x boat-base-0-y
       set shape "fronthydro"

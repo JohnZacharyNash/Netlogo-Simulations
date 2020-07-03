@@ -44,7 +44,7 @@ to setup-hydrophones
 
   create-hydrophones 3
   [
-    set size 30
+    set size 3
     ask hydrophone 3 [
       setxy boat-base-0-x boat-base-0-y
       set shape "fronthydro"
@@ -202,7 +202,7 @@ to go-tag ;tag procedure that defines the behaviour of the tag every tick
 
     ]
 
-      ask hydrophones in-radius (size / ) [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 8 DOES NOT COLLIDE, 7 IS TOO LARGE A COLLISION RADIUS.
+      ask hydrophones in-radius (size / 6) [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
       die
 
