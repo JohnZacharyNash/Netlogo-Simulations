@@ -20,6 +20,9 @@ globals
   boat-returned-home?
   boat-arrived-base-1?
   first-hydro
+  front-tick
+  left-tick
+  right-tick
 ]
 
 patches-own [ depth]
@@ -159,6 +162,7 @@ to go
 
   if (boat-returned-home?)
   [ stop ]
+
   tick
 end
 
@@ -166,8 +170,14 @@ to go-hydrophones
   ask hydrophones
   [
     create-link-with the-boat [tie]
+     show count tags-here
+
+
   ]
 end
+
+
+
 
 
 
@@ -191,26 +201,33 @@ to go-tag
       set size 1
     ]
 
-    ask hydrophones in-radius (size / 6)
-    [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
+
+   ; ask hydrophones in-radius (size / 6)
+   ; [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
       ;die ; NOTE TO BILL, UNCOMMENT DIE TO SEE HOW THIS COLLISION IS EFFECTED EASIER.
 
-      set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
+      ;set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
 
-      if (first-hydro = 3)
-      [
-        print "front hydrophone"
-      ]
-      if (first-hydro = 4)
-      [
-        print "left hydrophone"
-      ]
-      if (first-hydro = 5)
-      [
-        print "right hydrophone"
-      ]
-    ]
+      ;if (first-hydro = 3)
+      ;[
+      ;  set front-tick ticks
+       ; print "front hydrophone"
+        ;print front-tick
+      ;]
+      ;if (first-hydro = 4)
+      ;[
+       ; print "left hydrophone"
+        ;set left-tick ticks
+        ;print left-tick
+      ;]
+      ;if (first-hydro = 5)
+      ;[
+       ; set right-tick ticks
+        ;print "right hydrophone"
+        ;print right-tick
+      ;]
+    ;]
   ]
 end
 
@@ -303,8 +320,8 @@ GRAPHICS-WINDOW
 400
 -240
 240
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -382,7 +399,7 @@ fish-speed
 fish-speed
 0
 10
-1.8
+1.3
 0.1
 1
 NIL
@@ -397,7 +414,7 @@ boat-speed
 boat-speed
 0
 10
-1.2
+1.6
 0.1
 1
 NIL
@@ -455,7 +472,7 @@ SWITCH
 503
 show-fish-track?
 show-fish-track?
-0
+1
 1
 -1000
 

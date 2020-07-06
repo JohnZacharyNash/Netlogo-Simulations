@@ -20,6 +20,9 @@ globals
   boat-returned-home?
   boat-arrived-base-1?
   first-hydro
+  front-tick
+  left-tick
+  right-tick
 ]
 
 patches-own [ depth]
@@ -36,7 +39,6 @@ to setup
   ;setup-environment
   setup-hydrophones
 
-
   reset-ticks
 end
 
@@ -44,14 +46,11 @@ to setup-hydrophones
 
   create-hydrophones 3
   [
-    set size 3
+    set size 50
     ask hydrophone 3 [
       setxy boat-base-0-x boat-base-0-y
       set shape "fronthydro"
       set heading 0
-
-
-
     ]
     ask hydrophone 4[
       setxy boat-base-0-x  boat-base-0-y
@@ -64,19 +63,15 @@ to setup-hydrophones
       set shape "righthydro"
       set heading 0
     ]
-
-
   ]
-
-
 end
 
 
 to setup-tag
   ;sets up acoustic tag
 
-    set fish-start-0-x 4
-    set fish-start-0-y -40
+  set fish-start-0-x 4
+  set fish-start-0-y -40
 
   create-tags 1
   [
@@ -84,12 +79,7 @@ to setup-tag
     setxy fish-start-0-x fish-location-y
     set size 20
     set shape "seethru"
-
-
-
   ]
-
-
 end
 
 
@@ -115,35 +105,35 @@ to setup-boat
     pen-down
     set color magenta
     set heading 0
-
   ]
 end
 
 to setup-fish
 
   ;sets up the fish
-    set fish-start-0-x 4
-    set fish-start-0-y -40
+  set fish-start-0-x 4
+  set fish-start-0-y -40
 
   set fish-oob? false
   create-fishes 1
   [
+    if (show-fish-track?)
+    [ pen-down ]
+
     set the-fish self
     setxy fish-start-0-x fish-location-y
-    set size 7
+    set size 15
     set color gray
     set heading 0
 
     ifelse random 2 = 0
-    [set direction 1]
-    [set direction -1]
+    [ set direction 1 ]
+    [ set direction -1 ]
 
     set direction 1
     if (direction = 1)
-    [set heading 25]
-
+    [ set heading 25 ]
   ]
-
 end
 to setup-environment
   ;Loads the environment
@@ -152,29 +142,35 @@ end
 
 to go
 
-  ask hydrophones[
+  ask hydrophones
+  [
     go-hydrophones
   ]
-  ask fishes[
+  ask fishes
+  [
     go-fish
   ]
-  ask boats[
+  ask boats
+  [
     go-boat
   ]
 
-  ask tags[
+  ask tags
+  [
     go-tag
   ]
 
   if (boat-returned-home?)
-  [stop]
+  [ stop ]
+
   tick
 end
 
 to go-hydrophones
-  ask hydrophones[
+  ask hydrophones
+  [
     create-link-with the-boat [tie]
-
+     show
 
 
   ]
@@ -182,86 +178,80 @@ end
 
 
 
-to go-tag ;tag procedure that defines the behaviour of the tag every tick
-    let these-fishes fishes in-radius 1000
-    let this-fish nobody
-    set this-fish one-of these-fishes
-    set heading towards this-fish
-    fd fish-speed
 
-  ask tags [
 
+
+to go-tag
+  ; tag procedure that defines the behaviour of the tag every tick
+
+  let these-fishes fishes in-radius 1000
+  let this-fish nobody
+  set this-fish one-of these-fishes
+  set heading towards this-fish
+  fd fish-speed
+
+  ask tags
+  [
     if size < 600
     [
       set size size + 100
     ]
     if size > 599
     [
-
-    set size 1
-
+      set size 1
     ]
 
-      ask hydrophones in-radius (size / 6) [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
-      die
+   ; ask hydrophones in-radius (size / 6)
+   ; [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
-    set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
+      ;die ; NOTE TO BILL, UNCOMMENT DIE TO SEE HOW THIS COLLISION IS EFFECTED EASIER.
 
+      ;set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
 
-
-      if (first-hydro = 3)
-      [
-        print "front hydrophone"
-      ]
-      if (first-hydro = 4)
-      [
-        print "left hydrophone"
-      ]
-      if (first-hydro = 5)
-      [
-        print "right hydrophone"
-      ]
-
-
-
-
-    ]
-
+      ;if (first-hydro = 3)
+      ;[
+      ;  set front-tick ticks
+       ; print "front hydrophone"
+        ;print front-tick
+      ;]
+      ;if (first-hydro = 4)
+      ;[
+       ; print "left hydrophone"
+        ;set left-tick ticks
+        ;print left-tick
+      ;]
+      ;if (first-hydro = 5)
+      ;[
+       ; set right-tick ticks
+        ;print "right hydrophone"
+        ;print right-tick
+      ;]
+    ;]
   ]
-
-
-
-
 end
 
 
 
 to go-fish ;fish procedure that defines the behaviour of the fish every tick
 
-
-    fish-head-randomly
+  fish-head-randomly
 
   let fish-behaviours
   [ "Stationary" "go-fish-stationary"
-    "Random" "go-fish-random"
-     ]
+    "Random" "go-fish-random" ]
   let p position fish-behaviour fish-behaviours
   run (item(p + 1) fish-behaviours)
 end
 
-
-
 to go-boat
 
-
-    let boat-behaviours [
-    "Stationary" "go-boat-stationary"
-    "Follow fish" "go-boat-follow-fish"]
+  let boat-behaviours
+  [ "Stationary" "go-boat-stationary"
+    "Follow fish" "go-boat-follow-fish" ]
 
     let p position boat-behaviour boat-behaviours
     run (item(p + 1) boat-behaviours)
-
 end
 
 ;*********************FISH BEHAVIOURS*********************
@@ -281,38 +271,32 @@ to go-fish-random
 
   fish-head-randomly
   fd fish-speed
-
 end
-
-
 
 ;*********************BOAT BEHAVIOURS*********************
 to go-boat-stationary
 end
 
 to go-boat-follow-fish
-let these-fishes fishes in-radius 150
+  let these-fishes fishes in-radius 150
   let this-fish nobody
 
+  ifelse (count these-fishes = 0)
+    [
+      output-print (word "Lost the fish at tick: " ticks)
+      fd boat-speed
+    ]
+    [
+      set this-fish one-of these-fishes
+      set heading towards this-fish
+      ifelse (distance this-fish > 10)
+        [ fd boat-speed ]
+        [
+          output-print (word "Too close to fish, slowing: " ticks)
 
-          ifelse (count these-fishes = 0)
-            [
-              output-print (word "Lost the fish at tick: " ticks)
-              fd boat-speed
-            ]
-            [
-              set this-fish one-of these-fishes
-              set heading towards this-fish
-              ifelse (distance this-fish > 10)
-                [ fd boat-speed ]
-                [
-                  output-print (word "Too close to fish, slowing: " ticks)
-
-                  fd boat-speed / 10
-                ] ; too close - slow down
-            ]
-
-
+          fd boat-speed / 10
+        ] ; too close - slow down
+    ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -344,8 +328,8 @@ ticks
 
 BUTTON
 22
-45
-85
+34
+124
 78
 NIL
 setup
@@ -387,60 +371,60 @@ Hydrophone Tracking System Simulation (1.0)
 1
 
 CHOOSER
-18
-173
-156
-218
+22
+151
+160
+196
 fish-behaviour
 fish-behaviour
 "Stationary" "Random"
 1
 
 CHOOSER
-18
-219
-156
-264
+22
+197
+160
+242
 boat-behaviour
 boat-behaviour
 "Stationary" "Follow fish"
 1
 
 SLIDER
-15
-324
-187
-357
+19
+290
+191
+323
 fish-speed
 fish-speed
 0
 10
-1.8
+1.3
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-292
-187
-325
+19
+258
+191
+291
 boat-speed
 boat-speed
 0
 10
-1.2
+1.6
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-370
-189
-403
+19
+336
+193
+369
 heading-percentage
 heading-percentage
 0
@@ -452,10 +436,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-15
-402
-189
-435
+19
+368
+193
+401
 heading-change-percentage
 heading-change-percentage
 0
@@ -467,10 +451,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-15
-458
-187
-491
+19
+414
+193
+447
 fish-location-y
 fish-location-y
 -100
@@ -480,6 +464,17 @@ fish-location-y
 1
 NIL
 HORIZONTAL
+
+SWITCH
+19
+470
+193
+503
+show-fish-track?
+show-fish-track?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
