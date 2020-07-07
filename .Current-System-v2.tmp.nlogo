@@ -1,3 +1,15 @@
+;; Author: John Zachary Nash
+;; Title: Hydrophone Tracking System Simuluation
+;; Version: 2.1
+;; Date: July 7 2020
+;; This simulation is built to be compared to a similar system, to judge their effectiveness.
+;; This system has a autonomous boat reacting to a fish, with an acoustic tag attached to it.
+;; The 'current system' that this simulation is built to emulate is to use a three hydrophone
+;; rig, connected to a boat. The first hydrophone to recieve data from the ping is determined
+;; as the direction the fish is located. The boat then steers in that direction, following the
+;; fish. The boat can peroidically lose signal to the fish, if the hydrophones are recieving
+;; no data.
+
 breed [fishes fish]
 breed [boats boat]
 breed [hydrophones hydrophone]
@@ -23,6 +35,9 @@ globals
   front-tick
   left-tick
   right-tick
+  fish-inc
+  hunger-timer
+
 ]
 
 patches-own [ depth]
@@ -43,7 +58,7 @@ to setup
 end
 
 to setup-hydrophones
-
+  ;Sets up 3 Hydrophones in their individual locations
   create-hydrophones 3
   [
     set size 50
@@ -68,7 +83,7 @@ end
 
 
 to setup-tag
-  ;sets up acoustic tag
+  ;sets up acoustic tag and sets their location to the same start as the fish
 
   set fish-start-0-x 4
   set fish-start-0-y -40
@@ -84,8 +99,8 @@ end
 
 
 to setup-boat
+  ;Sets up the boat with a static start location
 
-  ;Sets up the boat
   set boat-oob? false
   set boat-arrived-base-1? false
   set boat-returned-home? false
@@ -109,10 +124,12 @@ to setup-boat
 end
 
 to setup-fish
+  ;sets up the fish in specific location, y axis start is a user-defined variable
 
-  ;sets up the fish
   set fish-start-0-x 4
   set fish-start-0-y -40
+  set fish-inc 1
+  set hunger-timer random 40
 
   set fish-oob? false
   create-fishes 1
@@ -122,9 +139,10 @@ to setup-fish
 
     set the-fish self
     setxy fish-start-0-x fish-location-y
-    set size 15
+    set size 22
     set color gray
     set heading 0
+    set shape "fish"
 
     ifelse random 2 = 0
     [ set direction 1 ]
@@ -141,6 +159,7 @@ to setup-environment
 end
 
 to go
+  ;Starts simulation
 
   ask hydrophones
   [
@@ -167,10 +186,14 @@ to go
 end
 
 to go-hydrophones
+  ;Starts hydrophone simulation
+  ;links them to the location and rotation of the boat
+  ; prints the count of collisions between hydrophones and acoustic tag pings
+
   ask hydrophones
   [
     create-link-with the-boat [tie]
-     show
+     show count tags-here
 
 
   ]
@@ -182,13 +205,14 @@ end
 
 
 to go-tag
-  ; tag procedure that defines the behaviour of the tag every tick
+  ;Starts tag simulation
+  ;creates tie link with fish
+  ;increases in size to reflect acoustic ping in practise
+  ;once it reaches the range of the tag, the tag resets size
+  ;this emulates another tag ping
 
-  let these-fishes fishes in-radius 1000
-  let this-fish nobody
-  set this-fish one-of these-fishes
-  set heading towards this-fish
-  fd fish-speed
+
+  create-link-with the-fish [tie]
 
   ask tags
   [
@@ -205,7 +229,7 @@ to go-tag
    ; ask hydrophones in-radius (size / 6)
    ; [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
-      ;die ; NOTE TO BILL, UNCOMMENT DIE TO SEE HOW THIS COLLISION IS EFFECTED EASIER.
+      ;die ;
 
       ;set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
 
@@ -233,18 +257,26 @@ end
 
 
 
-to go-fish ;fish procedure that defines the behaviour of the fish every tick
+to go-fish
+  ;Starts fish procedures
+  ;calls procedure fish-head-randomly to define heading
+  ;defines user-defined behaviours
 
   fish-head-randomly
 
   let fish-behaviours
   [ "Stationary" "go-fish-stationary"
-    "Random" "go-fish-random" ]
+    "Random" "go-fish-random"
+    "Feeding" "go-fish-feeding"
+  ]
   let p position fish-behaviour fish-behaviours
   run (item(p + 1) fish-behaviours)
 end
 
 to go-boat
+  ;Starts boat procedures
+  ;defines user-defined behaviours
+
 
   let boat-behaviours
   [ "Stationary" "go-boat-stationary"
@@ -257,27 +289,70 @@ end
 ;*********************FISH BEHAVIOURS*********************
 
 to go-fish-stationary
-  ;do nothing
+  ;fish behaviour for doing nothing
 
 end
 
 to fish-head-randomly
-  ;fish wanders in a random state according to the slider var
+  ;fish behaviour to wander in a random state according to the slider variable
+
   if (random 100 < heading-percentage)
   [ set heading heading + random heading-change-percentage - random heading-change-percentage ]
 end
 
 to go-fish-random
+  ;fish behaviour to wander in a random state according to the slider variable and move at user-defined speeds
 
   fish-head-randomly
-  fd fish-speed
 end
+
+to go-fish-feeding
+  ;calls fish-head-randomly
+  ;
+  ;
+
+
+
+  if
+  fish-inc < 30
+  [
+    print "feeding..."
+    print fish-inc
+    fd 0
+    set fish-inc fish-inc + 1
+  ]
+  if
+  fish-inc > 29 and hunger-timer < 78
+  [
+    print "finished feeding"
+    fd fish-speed
+    set hunger-timer hunger-timer + 1
+  ]
+  if
+  hunger-timer = 70
+  [
+    fd fish-speed
+    print "hungry, time to feed"
+    set fish-inc 0
+    set hunger-timer 0
+  ]
+
+
+
+end
+
 
 ;*********************BOAT BEHAVIOURS*********************
 to go-boat-stationary
+  ;boat does nothing
+
 end
 
 to go-boat-follow-fish
+  ;temporary procedure that forces the boat into the direct direction of the fish
+  ;will be replaced by procedures that more reflect real life events
+  ;slows down if fish is too close
+
   let these-fishes fishes in-radius 150
   let this-fish nobody
 
@@ -289,12 +364,12 @@ to go-boat-follow-fish
     [
       set this-fish one-of these-fishes
       set heading towards this-fish
-      ifelse (distance this-fish > 10)
+      ifelse (distance this-fish > 40)
         [ fd boat-speed ]
         [
           output-print (word "Too close to fish, slowing: " ticks)
 
-          fd boat-speed / 10
+          fd boat-speed / 20
         ] ; too close - slow down
     ]
 end
@@ -320,8 +395,8 @@ GRAPHICS-WINDOW
 400
 -240
 240
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -377,8 +452,8 @@ CHOOSER
 196
 fish-behaviour
 fish-behaviour
-"Stationary" "Random"
-1
+"Stationary" "Random" "Feeding"
+2
 
 CHOOSER
 22
@@ -414,7 +489,7 @@ boat-speed
 boat-speed
 0
 10
-1.6
+1.2
 0.1
 1
 NIL
@@ -422,9 +497,9 @@ HORIZONTAL
 
 SLIDER
 19
-336
-193
-369
+322
+191
+355
 heading-percentage
 heading-percentage
 0
@@ -437,9 +512,9 @@ HORIZONTAL
 
 SLIDER
 19
-368
-193
-401
+355
+191
+388
 heading-change-percentage
 heading-change-percentage
 0
@@ -452,9 +527,9 @@ HORIZONTAL
 
 SLIDER
 19
-414
-193
-447
+388
+191
+421
 fish-location-y
 fish-location-y
 -100
@@ -466,21 +541,20 @@ NIL
 HORIZONTAL
 
 SWITCH
-19
-470
-193
-503
+18
+429
+192
+462
 show-fish-track?
 show-fish-track?
-1
+0
 1
 -1000
 
 @#$#@#$#@
 ## WHAT IS IT?
 
-This simulation is built to be compared to a similar system, to just their effectiveness.
-This system has a autonomous boat reacting to a fish, with an acoustic tag attached to it. The 'current system' that this simulation is built to emulate is to use a three hydrophone rig, connected to a boat. The first hydrophone to recieve data from the ping is determined as the direction the fish is located. The boat then steers in that direction, following the fish. The boat can peroidically lose signal to the fish, if the hydrophones are recieving no data.
+This simulation is built to be compared to a similar system, to judge their effectiveness. This system has a autonomous boat reacting to a fish, with an acoustic tag attached to it. The 'current system' that this simulation is built to emulate is to use a three hydrophone rig, connected to a boat. The first hydrophone to recieve data from the ping is determined as the direction the fish is located. The boat then steers in that direction, following the fish. The boat can peroidically lose signal to the fish, if the hydrophones are recieving no data.
 
 ## HOW IT WORKS
 
