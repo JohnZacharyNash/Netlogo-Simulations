@@ -1,7 +1,7 @@
 ;; Author: John Zachary Nash
 ;; Title: Hydrophone Tracking System Simuluation
 ;; Version: 2.1
-;; Date: July 7 2020
+;; Date: July 14 2020
 ;; This simulation is built to be compared to a similar system, to judge their effectiveness.
 ;; This system has a autonomous boat reacting to a fish, with an acoustic tag attached to it.
 ;; The 'current system' that this simulation is built to emulate is to use a three hydrophone
@@ -37,6 +37,9 @@ globals
   right-tick
   fish-inc
   hunger-timer
+  hydro-front-dist
+  hydro-left-dist
+  hydro-right-dist
 
 ]
 
@@ -63,20 +66,20 @@ to setup-hydrophones
   [
     set size 50
     ask hydrophone 3 [
-      setxy boat-base-0-x boat-base-0-y
+      setxy boat-base-0-x boat-base-0-y + 4
       set shape "fronthydro"
       set heading 0
     ]
     ask hydrophone 4[
-      setxy boat-base-0-x  boat-base-0-y
-      set shape "lefthydro"
-      set heading 0
+      setxy boat-base-0-x + 4  boat-base-0-y
+      set shape "fronthydro"
+      set heading 90
     ]
 
     ask hydrophone 5[
-      setxy boat-base-0-x boat-base-0-y
-      set shape "righthydro"
-      set heading 0
+      setxy boat-base-0-x - 4 boat-base-0-y
+      set shape "fronthydro"
+      set heading 270
     ]
   ]
 end
@@ -193,14 +196,11 @@ to go-hydrophones
   ask hydrophones
   [
     create-link-with the-boat [tie]
-     show count tags-here
+    ;show count tags-here
 
 
   ]
 end
-
-
-
 
 
 
@@ -216,11 +216,11 @@ to go-tag
 
   ask tags
   [
-    if size < 600
+    if size < 800
     [
       set size size + 100
     ]
-    if size > 599
+    if size > 799
     [
       set size 1
     ]
@@ -280,7 +280,9 @@ to go-boat
 
   let boat-behaviours
   [ "Stationary" "go-boat-stationary"
-    "Follow fish" "go-boat-follow-fish" ]
+    "Follow fish" "go-boat-follow-fish"
+    "Track Fish" "go-track-fish"
+  ]
 
     let p position boat-behaviour boat-behaviours
     run (item(p + 1) boat-behaviours)
@@ -304,27 +306,33 @@ to go-fish-random
   ;fish behaviour to wander in a random state according to the slider variable and move at user-defined speeds
 
   fish-head-randomly
+  fd fish-speed
 end
 
 to go-fish-feeding
   ;calls fish-head-randomly
   ;
   ;
-
-
-
   if
   fish-inc < 30
   [
-    print "feeding..."
-    print fish-inc
+    if
+    debug-on? = true
+    [
+      print "feeding..."
+      print fish-inc
+    ]
     fd 0
     set fish-inc fish-inc + 1
   ]
   if
   fish-inc > 29 and hunger-timer < 78
   [
-    print "finished feeding"
+    if
+    debug-on? = true
+    [
+      print "finished feeding"
+    ]
     fd fish-speed
     set hunger-timer hunger-timer + 1
   ]
@@ -332,7 +340,11 @@ to go-fish-feeding
   hunger-timer = 70
   [
     fd fish-speed
-    print "hungry, time to feed"
+    if
+    debug-on? = true
+    [
+      print "hungry, time to feed"
+    ]
     set fish-inc 0
     set hunger-timer 0
   ]
@@ -372,6 +384,104 @@ to go-boat-follow-fish
           fd boat-speed / 20
         ] ; too close - slow down
     ]
+end
+
+to go-track-fish
+  ;Calculates which hydrophone is closest when they are in range to the tag
+  ;If the tag is in range of all hydrophones, the boat travels in the direction that the closest hydrophone is pointing
+  ;If the tags are too close, the boat hangs back
+  ask hydrophone 3
+  [
+    set hydro-front-dist distance the-tag
+    if
+    debug-hydrophones-on? = true
+    [
+      print hydro-front-dist
+    ]
+  ]
+  ask hydrophone 4
+  [
+    set hydro-right-dist distance the-tag
+    if
+    debug-hydrophones-on? = true
+    [
+      print hydro-right-dist
+    ]
+  ]
+  ask hydrophone 5
+  [
+    set hydro-left-dist distance the-tag
+    if
+    debug-hydrophones-on? = true
+    [
+      print hydro-left-dist
+    ]
+  ]
+
+  ifelse
+  (hydro-front-dist < 200) and (hydro-left-dist < 200) and (hydro-right-dist < 200)
+  [
+    ifelse
+    (hydro-front-dist > too-close-parameter) and (hydro-left-dist > too-close-parameter) and (hydro-right-dist > too-close-parameter)
+    [
+      if
+      (hydro-front-dist < hydro-left-dist) and (hydro-front-dist < hydro-right-dist)
+      [
+        ask the-boat
+        [
+          if debug-hydrophones-on? = true
+          [
+            print "forwards"
+          ]
+          fd boat-speed
+        ]
+      ]
+      if
+      (hydro-left-dist < hydro-front-dist) and (hydro-left-dist < hydro-right-dist)
+      [
+        ask the-boat
+        [
+          if debug-hydrophones-on? = true
+          [
+            print "left"
+          ]
+          rt -90
+          fd boat-speed
+        ]
+      ]
+      if
+      (hydro-right-dist < hydro-left-dist) and (hydro-right-dist < hydro-front-dist)
+      [
+        ask the-boat
+        [
+          if debug-hydrophones-on? = true
+          [
+            print "right"
+          ]
+          rt 90
+          fd boat-speed
+        ]
+      ]
+    ]
+   [
+      ask the-boat
+      [
+        print "too close"
+        fd boat-speed / 20
+      ]
+    ]
+
+
+
+  ]
+  [
+    print "boat is lost"
+    fd boat-speed
+  ]
+
+
+
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -440,7 +550,7 @@ TEXTBOX
 10
 725
 36
-Hydrophone Tracking System Simulation (1.0)
+Hydrophone Tracking System Simulation (2.1)
 22
 0.0
 1
@@ -453,7 +563,7 @@ CHOOSER
 fish-behaviour
 fish-behaviour
 "Stationary" "Random" "Feeding"
-2
+1
 
 CHOOSER
 22
@@ -462,8 +572,8 @@ CHOOSER
 242
 boat-behaviour
 boat-behaviour
-"Stationary" "Follow fish"
-1
+"Stationary" "Follow fish" "Track Fish"
+2
 
 SLIDER
 19
@@ -534,7 +644,7 @@ fish-location-y
 fish-location-y
 -100
 100
-22.0
+61.0
 1
 1
 NIL
@@ -542,14 +652,51 @@ HORIZONTAL
 
 SWITCH
 18
-429
+482
 192
-462
+515
 show-fish-track?
 show-fish-track?
 0
 1
 -1000
+
+SWITCH
+18
+514
+192
+547
+debug-on?
+debug-on?
+1
+1
+-1000
+
+SWITCH
+18
+546
+192
+579
+debug-hydrophones-on?
+debug-hydrophones-on?
+1
+1
+-1000
+
+SLIDER
+19
+421
+191
+454
+too-close-parameter
+too-close-parameter
+40
+110
+80.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
