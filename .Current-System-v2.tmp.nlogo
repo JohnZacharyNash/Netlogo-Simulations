@@ -202,16 +202,12 @@ to go-hydrophones
   ]
 end
 
-
-
 to go-tag
   ;Starts tag simulation
   ;creates tie link with fish
   ;increases in size to reflect acoustic ping in practise
   ;once it reaches the range of the tag, the tag resets size
   ;this emulates another tag ping
-
-
   create-link-with the-fish [tie]
 
   ask tags
@@ -224,8 +220,6 @@ to go-tag
     [
       set size 1
     ]
-
-
    ; ask hydrophones in-radius (size / 6)
    ; [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
 
@@ -254,8 +248,6 @@ to go-tag
     ;]
   ]
 end
-
-
 
 to go-fish
   ;Starts fish procedures
@@ -348,11 +340,7 @@ to go-fish-feeding
     set fish-inc 0
     set hunger-timer 0
   ]
-
-
-
 end
-
 
 ;*********************BOAT BEHAVIOURS*********************
 to go-boat-stationary
@@ -470,13 +458,11 @@ to go-track-fish
         fd boat-speed / 20
       ]
     ]
-
-
-
   ]
   [
     print "boat is lost"
     fd boat-speed
+    ;implement a survey function
   ]
 
 
@@ -563,7 +549,7 @@ CHOOSER
 fish-behaviour
 fish-behaviour
 "Stationary" "Random" "Feeding"
-1
+2
 
 CHOOSER
 22
@@ -584,7 +570,7 @@ fish-speed
 fish-speed
 0
 10
-1.3
+1.2
 0.1
 1
 NIL
@@ -644,7 +630,7 @@ fish-location-y
 fish-location-y
 -100
 100
-61.0
+26.0
 1
 1
 NIL
@@ -1071,6 +1057,46 @@ NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="5" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="debug-hydrophones-on?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="boat-behaviour">
+      <value value="&quot;Track Fish&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="debug-on?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="heading-change-percentage">
+      <value value="23"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fish-behaviour">
+      <value value="&quot;Feeding&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="heading-percentage">
+      <value value="38"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="too-close-parameter">
+      <value value="80"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="show-fish-track?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fish-location-y">
+      <value value="26"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="boat-speed">
+      <value value="1.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fish-speed">
+      <value value="1.2"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

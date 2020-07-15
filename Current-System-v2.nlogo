@@ -549,7 +549,7 @@ CHOOSER
 fish-behaviour
 fish-behaviour
 "Stationary" "Random" "Feeding"
-1
+2
 
 CHOOSER
 22
@@ -570,7 +570,7 @@ fish-speed
 fish-speed
 0
 10
-1.3
+1.2
 0.1
 1
 NIL
@@ -630,7 +630,7 @@ fish-location-y
 fish-location-y
 -100
 100
-61.0
+26.0
 1
 1
 NIL

@@ -1,0 +1,26 @@
+"BehaviorSpace results (NetLogo 6.1.1)"
+"Current-System-v2.nlogo"
+"experiment"
+"07/15/2020 13:12:10:341 +0100"
+"min-pxcor","max-pxcor","min-pycor","max-pycor"
+"-400","400","-240","240"
+"[run number]"
+"debug-hydrophones-on?",
+"boat-behaviour",
+"debug-on?",
+"heading-change-percentage",
+"fish-behaviour",
+"heading-percentage",
+"too-close-parameter",
+"show-fish-track?",
+"fish-location-y",
+"boat-speed",
+"fish-speed",
+"[reporter]"
+"[final]",
+"[min]",
+"[max]",
+"[mean]",
+"[steps]",
+
+"[all run data]"
