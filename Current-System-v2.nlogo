@@ -14,12 +14,15 @@ breed [fishes fish]
 breed [boats boat]
 breed [hydrophones hydrophone]
 breed [tags tag]
+breed [predicts predict]
 
 globals
 [
   the-fish
   the-boat
+  the-boat-direction
   the-tag
+  the-prediction
   the-hydrophone-left
   the-hydrophone-right
   the-hydrophone-front
@@ -56,6 +59,7 @@ to setup
   setup-fish
   ;setup-environment
   setup-hydrophones
+  setup-prediction
 
   reset-ticks
 end
@@ -120,7 +124,8 @@ to setup-boat
     setxy boat-base-0-x boat-base-0-y
     set size 10
     set pen-size 1
-    pen-down
+    if(show-boat-track?)
+    [ pen-down ]
     set color magenta
     set heading 0
   ]
@@ -156,6 +161,24 @@ to setup-fish
     [ set heading 25 ]
   ]
 end
+
+to setup-prediction
+  ;sets up localisation of fish prediciton
+  create-predicts 1
+  [
+    set the-prediction self
+    set size 15
+    set color blue
+    set shape "target"
+    setxy boat-base-0-x boat-base-0-y
+    if (show-prediction-fish-location?)
+    [ pen-down ]
+  ]
+
+
+
+
+end
 to setup-environment
   ;Loads the environment
   set-plot-background-color blue + 3
@@ -181,6 +204,11 @@ to go
   [
     go-tag
   ]
+    ask predicts
+  [
+    go-predict
+  ]
+
 
   if (boat-returned-home?)
   [ stop ]
@@ -220,34 +248,27 @@ to go-tag
     [
       set size 1
     ]
-   ; ask hydrophones in-radius (size / 6)
-   ; [ ;NOTE TO BILL, THIS IS THE COLLISION RADIUS, 7 DOES NOT COLLIDE, 6 IS TOO LARGE A COLLISION RADIUS.
-
-      ;die ;
-
-      ;set first-hydro who ; if acoustic tag collides with hydrophone, print the hydrophone
-
-      ;if (first-hydro = 3)
-      ;[
-      ;  set front-tick ticks
-       ; print "front hydrophone"
-        ;print front-tick
-      ;]
-      ;if (first-hydro = 4)
-      ;[
-       ; print "left hydrophone"
-        ;set left-tick ticks
-        ;print left-tick
-      ;]
-      ;if (first-hydro = 5)
-      ;[
-       ; set right-tick ticks
-        ;print "right hydrophone"
-        ;print right-tick
-      ;]
-    ;]
   ]
 end
+
+to go-predict
+  ;Starts prediction of current system
+  ;creates a link with boat
+  ;sets distance from boat, as boat's distance from tag
+  ask predicts
+  [
+
+    move-to the-boat
+    fd hydro-front-dist
+    ;face the-fish
+    set heading [heading] of the-boat
+    ;rt 180
+   ; create-link-with the-boat [tie]
+  ]
+
+
+end
+
 
 to go-fish
   ;Starts fish procedures
@@ -415,40 +436,17 @@ to go-track-fish
       if
       (hydro-front-dist < hydro-left-dist) and (hydro-front-dist < hydro-right-dist)
       [
-        ask the-boat
-        [
-          if debug-hydrophones-on? = true
-          [
-            print "forwards"
-          ]
-          fd boat-speed
-        ]
+        move-boat 0
       ]
       if
       (hydro-left-dist < hydro-front-dist) and (hydro-left-dist < hydro-right-dist)
       [
-        ask the-boat
-        [
-          if debug-hydrophones-on? = true
-          [
-            print "left"
-          ]
-          rt -90
-          fd boat-speed
-        ]
+        move-boat -90
       ]
       if
       (hydro-right-dist < hydro-left-dist) and (hydro-right-dist < hydro-front-dist)
       [
-        ask the-boat
-        [
-          if debug-hydrophones-on? = true
-          [
-            print "right"
-          ]
-          rt 90
-          fd boat-speed
-        ]
+        move-boat 90
       ]
     ]
    [
@@ -465,6 +463,25 @@ to go-track-fish
     ;implement a survey function
   ]
 
+end
+
+
+to move-boat [boatdirection]
+  ;moves the boat in the direction of the hydrophone with the smallest distance from the fish
+  ;parameter is angle of movement
+
+  ask the-boat
+  [
+    if debug-hydrophones-on? = true
+          [
+            print boatdirection
+
+          ]
+    rt boatdirection
+    fd boat-speed
+    set the-boat-direction boatdirection
+
+  ]
 
 
 
@@ -683,6 +700,28 @@ too-close-parameter
 1
 NIL
 HORIZONTAL
+
+SWITCH
+18
+579
+192
+612
+show-prediction-fish-location?
+show-prediction-fish-location?
+1
+1
+-1000
+
+SWITCH
+18
+612
+192
+645
+show-boat-track?
+show-boat-track?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
